@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+// ✅ API URL from .env
+const API_URL = import.meta.env.VITE_API_URL;
+
 function CSVUpload({ onResult }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -7,7 +10,7 @@ function CSVUpload({ onResult }) {
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-    setError(null); // reset error on new file
+    setError(null); // reset error
   };
 
   const handleUpload = async () => {
@@ -22,7 +25,7 @@ function CSVUpload({ onResult }) {
     formData.append("file", file);
 
     try {
-      const response = await fetch("https://boston-house-price-backend.onrender.com/predict_csv", {
+      const response = await fetch(`${API_URL}/predict_csv`, {
         method: "POST",
         body: formData,
       });
@@ -56,7 +59,6 @@ function CSVUpload({ onResult }) {
         {loading ? "⏳ Uploading..." : "🚀 Predict Prices"}
       </button>
 
-      {/* Error Display */}
       {error && <p className="text-red-600 mt-3">{error}</p>}
     </div>
   );

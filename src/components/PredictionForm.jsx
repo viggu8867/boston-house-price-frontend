@@ -1,10 +1,16 @@
 import { useState } from "react";
 
+// ✅ API URL from .env
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function PredictionForm({ onResult }) {
   const [formData, setFormData] = useState({
     CRIM: "", ZN: "", INDUS: "", CHAS: "", NOX: "", RM: "",
     AGE: "", DIS: "", RAD: "", TAX: "", PTRATIO: "", B: "", LSTAT: ""
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -12,15 +18,27 @@ export default function PredictionForm({ onResult }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-    const response = await fetch("https://boston-house-price-backend.onrender.com/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const response = await fetch(`${API_URL}/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    const data = await response.json();
-    onResult(data);
+      const data = await response.json();
+      if (data.error) {
+        setError("❌ " + data.error);
+      } else {
+        onResult(data);
+      }
+    } catch (err) {
+      setError("❌ Failed to get prediction. Please try again.");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -42,12 +60,16 @@ export default function PredictionForm({ onResult }) {
           />
         </div>
       ))}
+
       <button
         type="submit"
-        className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded mt-4"
+        disabled={loading}
+        className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded mt-4 disabled:opacity-50"
       >
-        Predict
+        {loading ? "⏳ Predicting..." : "Predict"}
       </button>
+
+      {error && <p className="col-span-2 text-red-600 mt-3">{error}</p>}
     </form>
   );
 }
